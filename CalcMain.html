@@ -111,3 +111,128 @@ git push -u origin main
   </script>
 </body>
 </html>
+<py> from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import parse_qs
+
+html_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .calculator {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      width: 300px;
+    }
+    .calculator input[type="button"] {
+      width: 50px;
+      height: 50px;
+      font-size: 18px;
+      border: none;
+      border-radius: 4px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    .calculator input[type="button"]:hover {
+      background-color: #f0f0f0;
+    }
+    .calculator input[type="text"] {
+      width: 100%;
+      height: 50px;
+      font-size: 24px;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      text-align: right;
+      padding: 0 10px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <form action="/" method="post">
+      <input type="text" id="result" name="result" readonly>
+      <div class="row">
+        <input type="button" value="7" onclick="addToResult('7')">
+        <input type="button" value="8" onclick="addToResult('8')">
+        <input type="button" value="9" onclick="addToResult('9')">
+        <input type="button" value="/" onclick="addToResult('/')">
+      </div>
+      <div class="row">
+        <input type="button" value="4" onclick="addToResult('4')">
+        <input type="button" value="5" onclick="addToResult('5')">
+        <input type="button" value="6" onclick="addToResult('6')">
+        <input type="button" value="*" onclick="addToResult('*')">
+      </div>
+      <div class="row">
+        <input type="button" value="1" onclick="addToResult('1')">
+        <input type="button" value="2" onclick="addToResult('2')">
+        <input type="button" value="3" onclick="addToResult('3')">
+        <input type="button" value="-" onclick="addToResult('-')">
+      </div>
+      <div class="row">
+        <input type="button" value="0" onclick="addToResult('0')">
+        <input type="button" value="." onclick="addToResult('.')">
+        <input type="submit" value="=">
+        <input type="button" value="+" onclick="addToResult('+')">
+      </div>
+      <div class="row">
+        <input type="reset" value="C">
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function addToResult(value) {
+      document.getElementById('result').value += value;
+    }
+  </script>
+</body>
+</html>
+"""
+
+class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(html_content.encode())
+
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length).decode()
+        result = parse_qs(post_data)['result'][0]
+        try:
+            result = str(eval(result))
+        except Exception as e:
+            result = 'Error: ' + str(e)
+
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(html_content.replace('<input 
+                                                type="text" id="result" name="result" readonly>', f'<input type="text" id="result" name="result" readonly value="{result}">').encode())
+
+httpd = HTTPServer(('localhost', 8000), SimpleHTTPRequestHandler)
+print('Server running at http://localhost:8000')
+httpd.serve_forever()
+</py>
